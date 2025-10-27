@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/dashboard")) {
     // In a real application, you would check for a valid JWT token
     // For this demo, we'll just check if the auth-token cookie exists
-    const token = request.cookies.get("auth-token");
+    const token = request.cookies.get("authToken");
 
     if (!token) {
       // Redirect to login page if not authenticated
