@@ -1,35 +1,37 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import Cookies from "js-cookie";
 
 interface AuthGuardProps {
-  children: React.ReactNode
-  fallback?: React.ReactNode
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 export function AuthGuard({ children, fallback }: AuthGuardProps) {
-  const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem("auth-token")
-      const user = localStorage.getItem("user")
+      const token = Cookies.get("authToken");
+      // const user = localStorage.getItem("user");
+      console.log(token);
 
-      if (token && user) {
-        setIsAuthenticated(true)
+      if (token) {
+        setIsAuthenticated(true);
       } else {
-        setIsAuthenticated(false)
-        router.push("/login")
+        setIsAuthenticated(false);
+        router.push("/login");
       }
-    }
+    };
 
-    checkAuth()
-  }, [router])
+    checkAuth();
+  }, [router]);
 
   if (isAuthenticated === null) {
     return (
@@ -38,17 +40,19 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
           <Card className="w-full max-w-md">
             <CardContent className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Checking authentication...</p>
+              <p className="text-muted-foreground">
+                Checking authentication...
+              </p>
             </CardContent>
           </Card>
         </div>
       )
-    )
+    );
   }
 
   if (!isAuthenticated) {
-    return null // Will redirect to login
+    return null; // Will redirect to login
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }
