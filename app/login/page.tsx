@@ -1,113 +1,139 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { Eye, EyeOff, Lock, Mail, ArrowLeft } from "lucide-react"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, Lock, Mail, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import Cookies from "js-cookie";
 
 interface LoginFormData {
-  email: string
-  password: string
+  email: string;
+  password: string;
 }
 
 interface FormErrors {
-  email?: string
-  password?: string
-  general?: string
+  email?: string;
+  password?: string;
+  general?: string;
 }
 
 export default function LoginPage() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
-  })
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
+    const newErrors: FormErrors = {};
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = "Email is required"
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address"
+      newErrors.email = "Please enter a valid email address";
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = "Password is required"
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters"
+      newErrors.password = "Password must be at least 6 characters";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrors({})
+    e.preventDefault();
+    setErrors({});
 
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Mock authentication - in real app, this would be an API call
-          if (formData.email === "admin@example.com" && formData.password === "password") {
-            resolve(true)
-          } else {
-            reject(new Error("Invalid credentials"))
-          }
-        }, 1500)
-      })
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-      // Store auth token (in real app, this would be handled by your auth system)
-      localStorage.setItem("auth-token", "mock-jwt-token")
-      localStorage.setItem("user", JSON.stringify({ email: formData.email, role: "admin" }))
+      const data = await res.json();
+      // console.log(data);
 
-      // Redirect to dashboard
-      router.push("/dashboard")
+      if (res.ok) {
+        toast.success("Login successful");
+        router.push("/dashboard");
+        Cookies.set("authToken", data.token, {
+          // httpOnly: true,
+          // secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          // maxAge: 7 * 24 * 60 * 60,
+        });
+      }
     } catch (error) {
+      console.log(error);
       setErrors({
         general: "Invalid email or password. Please try again.",
-      })
+      });
+      toast.error("Invalid email or password. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
     // Clear field-specific error when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-  }
+  };
+
+  useEffect(() => {
+    if (Cookies.get("authToken")) {
+      router.push("/dashboard");
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
         {/* Back to Home */}
         <div className="mb-8">
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            asChild
+            className="text-muted-foreground hover:text-foreground"
+          >
             <Link href="/">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
@@ -120,7 +146,9 @@ export default function LoginPage() {
             <div className="mx-auto h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
               <Lock className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-bold text-foreground">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl font-bold text-foreground">
+              Welcome Back
+            </CardTitle>
             <CardDescription className="text-muted-foreground">
               Sign in to access your portfolio dashboard
             </CardDescription>
@@ -138,24 +166,30 @@ export default function LoginPage() {
               {/* Email Field */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-foreground">
-                  Email Address
+                  Email or Username
                 </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     name="email"
-                    type="email"
+                    type="text"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="admin@example.com"
                     className={`pl-10 bg-background border-border focus:border-primary ${
-                      errors.email ? "border-destructive focus:border-destructive" : ""
+                      errors.email
+                        ? "border-destructive focus:border-destructive"
+                        : ""
                     }`}
                     disabled={isLoading}
                   />
                 </div>
-                {errors.email && <p className="text-sm text-destructive animate-fade-in">{errors.email}</p>}
+                {errors.email && (
+                  <p className="text-sm text-destructive animate-fade-in">
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -173,7 +207,9 @@ export default function LoginPage() {
                     onChange={handleChange}
                     placeholder="Enter your password"
                     className={`pl-10 pr-10 bg-background border-border focus:border-primary ${
-                      errors.password ? "border-destructive focus:border-destructive" : ""
+                      errors.password
+                        ? "border-destructive focus:border-destructive"
+                        : ""
                     }`}
                     disabled={isLoading}
                   />
@@ -192,11 +228,20 @@ export default function LoginPage() {
                     )}
                   </Button>
                 </div>
-                {errors.password && <p className="text-sm text-destructive animate-fade-in">{errors.password}</p>}
+                {errors.password && (
+                  <p className="text-sm text-destructive animate-fade-in">
+                    {errors.password}
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
@@ -210,7 +255,9 @@ export default function LoginPage() {
 
             {/* Demo Credentials */}
             <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
-              <p className="text-sm text-muted-foreground mb-2 font-medium">Demo Credentials:</p>
+              <p className="text-sm text-muted-foreground mb-2 font-medium">
+                Demo Credentials:
+              </p>
               <p className="text-sm text-muted-foreground">
                 <strong>Email:</strong> admin@example.com
               </p>
@@ -232,5 +279,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
