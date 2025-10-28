@@ -14,6 +14,12 @@ export const blogSchema = z.object({
   tags: z.array(z.string()).optional(),
   published: z.boolean().optional(),
 });
+export const contactSchema = z.object({
+  name: z.string().min(1, "Name is required").max(200),
+  email: z.string().min(1, "Email is required").max(200),
+  subject: z.string().min(1, "Subject is required").max(200),
+  message: z.string().min(1, "Message is required").max(500),
+});
 
 export const projectSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
