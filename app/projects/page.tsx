@@ -8,6 +8,7 @@ import { ExternalLink, Github } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ProjectCardSkeleton } from "@/components/skeleton-loader";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface Project {
   _id: string;
@@ -20,24 +21,33 @@ interface Project {
   githubLink?: string;
 }
 
-export default function ProjectsPage() {
+export default function ProjectsClient() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchProjects = async () => {
-    const response = await fetch("/api/projects");
-    const data: Project[] = await response.json();
-    setProjects(data);
+    try {
+      const response = await fetch("/api/projects");
+      if (!response.ok) {
+        throw new Error("Failed to fetch projects");
+      }
+      const data: Project[] = await response.json();
+      setProjects(data);
+    } catch (err) {
+      console.error("Error fetching projects:", err);
+      setError("Failed to load projects");
+      toast.error("Failed to load projects");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    setLoading(true);
     fetchProjects();
-    setLoading(false);
   }, []);
 
   const featuredProjects = projects.filter((project) => project.published);
-  const otherProjects = projects.filter((project) => !project.published);
 
   const getTechnologies = (techStringOrArray: string | string[]): string[] => {
     if (Array.isArray(techStringOrArray)) {
@@ -52,9 +62,20 @@ export default function ProjectsPage() {
     return [];
   };
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={fetchProjects}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <title>Projects - Portfolio - Full Stack Developer</title>
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -73,8 +94,13 @@ export default function ProjectsPage() {
         {/* Featured Projects */}
         <section className="mb-20">
           <div className="grid lg:grid-cols-3 gap-8">
-            {loading && <ProjectCardSkeleton />}
-            {!loading &&
+            {loading ? (
+              <>
+                <ProjectCardSkeleton />
+                <ProjectCardSkeleton />
+                <ProjectCardSkeleton />
+              </>
+            ) : (
               featuredProjects.map((project, index) => {
                 const technologies = getTechnologies(project.technologies);
                 return (
@@ -143,7 +169,8 @@ export default function ProjectsPage() {
                     </CardContent>
                   </Card>
                 );
-              })}
+              })
+            )}
           </div>
         </section>
 
