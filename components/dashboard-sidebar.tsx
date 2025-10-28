@@ -1,26 +1,32 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { BarChart3, FileText, FolderOpen, Home, PlusCircle, Settings } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { FileText, FolderOpen, PlusCircle, User, Users } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const navigation = [
-  { name: "Overview", href: "/dashboard", icon: Home },
-  { name: "Blog Posts", href: "/dashboard/blog", icon: FileText },
+  // { name: "Overview", href: "/dashboard", icon: Home },
   { name: "Projects", href: "/dashboard/projects", icon: FolderOpen },
-  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
-]
+  { name: "Blog Posts", href: "/dashboard/blog", icon: FileText },
+  { name: "Bio", href: "/dashboard/about", icon: User },
+  {
+    name: "Contacts",
+    href: "/dashboard/contact",
+    icon: Users,
+  },
+  // { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+  // { name: "Settings", href: "/dashboard/settings", icon: Settings },
+];
 
 const quickActions = [
   { name: "New Blog Post", href: "/dashboard/blog/new", icon: PlusCircle },
   { name: "New Project", href: "/dashboard/projects/new", icon: PlusCircle },
-]
+];
 
 export function DashboardSidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <aside className="w-64 bg-card border-r border-border">
@@ -28,7 +34,9 @@ export function DashboardSidebar() {
         <nav className="space-y-8">
           {/* Main Navigation */}
           <div>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Navigation</h3>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Navigation
+            </h3>
             <div className="space-y-1">
               {navigation.map((item) => (
                 <Button
@@ -36,7 +44,9 @@ export function DashboardSidebar() {
                   variant={pathname === item.href ? "secondary" : "ghost"}
                   className={cn(
                     "w-full justify-start",
-                    pathname === item.href ? "bg-secondary text-secondary-foreground" : "text-muted-foreground",
+                    pathname === item.href
+                      ? "bg-secondary text-secondary-foreground"
+                      : "text-muted-foreground"
                   )}
                   asChild
                 >
@@ -51,7 +61,9 @@ export function DashboardSidebar() {
 
           {/* Quick Actions */}
           <div>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quick Actions</h3>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Quick Actions
+            </h3>
             <div className="space-y-1">
               {quickActions.map((item) => (
                 <Button
@@ -71,5 +83,5 @@ export function DashboardSidebar() {
         </nav>
       </div>
     </aside>
-  )
+  );
 }

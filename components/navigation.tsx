@@ -1,35 +1,52 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Github, Linkedin, Mail, Menu, X } from "lucide-react"
-import { useState } from "react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Github,
+  LayoutDashboard,
+  Linkedin,
+  Lock,
+  Mail,
+  Menu,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import Cookies from "js-cookie";
 
 const navigation = [
-  { name: "About", href: "/" },
+  { name: "Home", href: "/" },
   { name: "Projects", href: "/projects" },
   { name: "Blog", href: "/blog" },
   { name: "Contact", href: "/contact" },
-]
+];
 
 const socialLinks = [
-  { name: "GitHub", href: "#", icon: Github },
-  { name: "LinkedIn", href: "#", icon: Linkedin },
-  { name: "Email", href: "mailto:hello@example.com", icon: Mail },
-]
+  { name: "GitHub", href: "https://github.com/muhammadranju", icon: Github },
+  {
+    name: "LinkedIn",
+    href: "https://bd.linkedin.com/in/muhammadranju",
+    icon: Linkedin,
+  },
+  { name: "Email", href: "mailto:mdranju23@gmail.com", icon: Mail },
+];
 
 export function Navigation() {
-  const pathname = usePathname()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const token = Cookies.get("authToken");
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="text-xl font-bold text-foreground hover:text-primary transition-colors">
+          <Link
+            href="/"
+            className="text-xl font-bold text-foreground hover:text-primary transition-colors"
+          >
             Portfolio
           </Link>
 
@@ -41,7 +58,9 @@ export function Navigation() {
                 href={item.href}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  pathname === item.href ? "text-primary" : "text-muted-foreground",
+                  pathname === item.href
+                    ? "text-primary"
+                    : "text-muted-foreground"
                 )}
               >
                 {item.name}
@@ -59,17 +78,48 @@ export function Navigation() {
                 asChild
                 className="text-muted-foreground hover:text-foreground"
               >
-                <Link href={item.href} target="_blank" rel="noopener noreferrer">
+                <Link
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <item.icon className="h-4 w-4" />
                   <span className="sr-only">{item.name}</span>
                 </Link>
               </Button>
             ))}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="text-white hover:text-foreground px-5  bg-black rounded-full "
+            >
+              <Link
+                href={`${token ? "/dashboard" : "/login"}`}
+                rel="noopener noreferrer"
+              >
+                {token ? (
+                  <LayoutDashboard className="h-4 w-4" />
+                ) : (
+                  <Lock className="h-4 w-4" />
+                )}
+              </Link>
+            </Button>
           </div>
 
           {/* Mobile menu button */}
-          <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
 
@@ -83,7 +133,9 @@ export function Navigation() {
                   href={item.href}
                   className={cn(
                     "text-sm font-medium transition-colors hover:text-primary px-2 py-1",
-                    pathname === item.href ? "text-primary" : "text-muted-foreground",
+                    pathname === item.href
+                      ? "text-primary"
+                      : "text-muted-foreground"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -99,7 +151,11 @@ export function Navigation() {
                     asChild
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    <Link href={item.href} target="_blank" rel="noopener noreferrer">
+                    <Link
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <item.icon className="h-4 w-4" />
                       <span className="sr-only">{item.name}</span>
                     </Link>
@@ -111,5 +167,5 @@ export function Navigation() {
         )}
       </div>
     </nav>
-  )
+  );
 }
