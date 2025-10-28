@@ -11,10 +11,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const published = searchParams.get("published");
 
+    // If published is not explicitly "true", show all (including drafts)
     const query = published === "true" ? { published: true } : {};
-    const blogs = await Blog.find(query)
-      .populate("author", "username")
-      .sort({ createdAt: -1 });
+    const blogs = await Blog.find(query);
+
+    // Log for debugging (remove in production)
+    console.log(
+      `Fetched ${blogs.length} blogs (query: ${JSON.stringify(query)})`
+    );
 
     return NextResponse.json(blogs, { status: 200 });
   } catch (error) {
