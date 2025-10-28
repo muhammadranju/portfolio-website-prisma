@@ -5,91 +5,55 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ExternalLink, Github } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ProjectCardSkeleton } from "@/components/skeleton-loader";
 
-const projects = [
-  {
-    id: 1,
-    title: "E-Commerce Platform",
-    description:
-      "A full-stack e-commerce solution with user authentication, payment processing, and admin dashboard. Built with modern technologies for optimal performance.",
-    thumbnail: "/modern-ecommerce-interface.png",
-    technologies: [
-      "Next.js",
-      "TypeScript",
-      "Stripe",
-      "PostgreSQL",
-      "Tailwind CSS",
-    ],
-    liveLink: "#",
-    githubLink: "#",
-    features: [],
-  },
-  {
-    id: 2,
-    title: "Task Management App",
-    description:
-      "A collaborative task management application with real-time updates, team collaboration features, and intuitive drag-and-drop interface.",
-    thumbnail: "/task-management-dashboard.png",
-    technologies: ["React", "Node.js", "Socket.io", "MongoDB", "Express"],
-    liveLink: "#",
-    githubLink: "#",
-    features: [],
-  },
-  {
-    id: 3,
-    title: "Weather Dashboard",
-    description:
-      "A responsive weather application with location-based forecasts, interactive maps, and detailed weather analytics.",
-    thumbnail: "/preview/project4.png",
-    technologies: ["React", "OpenWeather API", "Chart.js", "CSS Modules"],
-    liveLink: "#",
-    githubLink: "#",
-    features: [],
-  },
-  {
-    id: 4,
-    title: "Blog CMS",
-    description:
-      "A content management system for bloggers with rich text editing, SEO optimization, and analytics dashboard.",
-    thumbnail: "/blog-cms-admin-interface.jpg",
-    technologies: ["Next.js", "Prisma", "PostgreSQL", "React Quill"],
-    liveLink: "#",
-    githubLink: "#",
-    features: [],
-  },
-  {
-    id: 5,
-    title: "Portfolio Website",
-    description:
-      "A responsive portfolio website with dynamic content management, blog functionality, and contact forms.",
-    thumbnail: "/portfolio-website-design.png",
-    technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"],
-    liveLink: "#",
-    githubLink: "#",
-    features: [],
-  },
-  {
-    id: 6,
-    title: "Chat Application",
-    description:
-      "Real-time chat application with private messaging, group chats, file sharing, and emoji reactions.",
-    thumbnail: "/chat-application-interface.png",
-    technologies: ["React", "Socket.io", "Node.js", "MongoDB"],
-    liveLink: "#",
-    githubLink: "#",
-    features: [],
-  },
-];
+interface Project {
+  _id: string;
+  title: string;
+  description: string;
+  technologies: string | string[];
+  thumbnail?: string;
+  published: boolean;
+  liveLink?: string;
+  githubLink?: string;
+}
 
 export default function ProjectsPage() {
-  const [projectss, setProjects] = useState([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const featuredProjects = projects.filter((project) => project.features);
-  const otherProjects = projects.filter((project) => !project.features);
+  const fetchProjects = async () => {
+    const response = await fetch("/api/projects");
+    const data: Project[] = await response.json();
+    setProjects(data);
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    fetchProjects();
+    setLoading(false);
+  }, []);
+
+  const featuredProjects = projects.filter((project) => project.published);
+  const otherProjects = projects.filter((project) => !project.published);
+
+  const getTechnologies = (techStringOrArray: string | string[]): string[] => {
+    if (Array.isArray(techStringOrArray)) {
+      return techStringOrArray;
+    }
+    if (typeof techStringOrArray === "string") {
+      return techStringOrArray
+        .split(",")
+        .map((tech) => tech.trim())
+        .filter((tech) => tech.length > 0);
+    }
+    return [];
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      <title>Projects - Portfolio - Full Stack Developer</title>
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -108,60 +72,73 @@ export default function ProjectsPage() {
         {/* Featured Projects */}
         <section className="mb-20">
           <div className="grid lg:grid-cols-2 gap-8">
-            {featuredProjects.map((project, index) => (
-              <Card
-                key={project.id}
-                className="group hover:shadow-lg transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 200}ms` }}
-              >
-                <div className="aspect-video overflow-hidden rounded-t-lg">
-                  <img
-                    src={project.thumbnail || "/placeholder.svg"}
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-xl text-foreground group-hover:text-primary transition-colors">
-                    {project.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground leading-relaxed">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {project.technologies.map((tech) => (
-                      <Badge key={tech} variant="secondary" className="text-xs">
-                        {tech}
-                      </Badge>
-                    ))}
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <Button size="sm" asChild>
-                      <Link
-                        href={project.liveLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Live Demo
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link
-                        href={project.githubLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Github className="h-4 w-4 mr-2" />
-                        Code
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {loading && <ProjectCardSkeleton />}
+            {!loading &&
+              featuredProjects.map((project, index) => {
+                const technologies = getTechnologies(project.technologies);
+                return (
+                  <Card
+                    key={project._id}
+                    className="group hover:shadow-lg transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${index * 200}ms` }}
+                  >
+                    <div className="aspect-video overflow-hidden rounded-t-lg">
+                      <img
+                        src={project.thumbnail || "/placeholder.svg"}
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="text-xl text-foreground group-hover:text-primary transition-colors">
+                        {project.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-muted-foreground leading-relaxed">
+                        {project.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {technologies.map((tech) => (
+                          <Badge
+                            key={tech}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {tech}
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        {project.liveLink && (
+                          <Button size="sm" asChild>
+                            <Link
+                              href={project.liveLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Live Demo
+                            </Link>
+                          </Button>
+                        )}
+                        {project.githubLink && (
+                          <Button variant="outline" size="sm" asChild>
+                            <Link
+                              href={project.githubLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Github className="h-4 w-4 mr-2" />
+                              Code
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
           </div>
         </section>
 
@@ -171,75 +148,87 @@ export default function ProjectsPage() {
             Other Projects
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {otherProjects.map((project, index) => (
-              <Card
-                key={project.id}
-                className="group hover:shadow-md transition-all duration-300 animate-fade-in"
-                style={{ animationDelay: `${(index + 2) * 100}ms` }}
-              >
-                <div className="aspect-video overflow-hidden rounded-t-lg">
-                  <img
-                    src={project.thumbnail || "/placeholder.svg"}
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-foreground group-hover:text-primary transition-colors">
-                    {project.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {project.technologies.slice(0, 3).map((tech) => (
-                      <Badge key={tech} variant="secondary" className="text-xs">
-                        {tech}
-                      </Badge>
-                    ))}
-                    {project.technologies.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{project.technologies.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      asChild
-                      className="flex-1 bg-transparent"
-                    >
-                      <Link
-                        href={project.liveLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Demo
-                      </Link>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      asChild
-                      className="flex-1 bg-transparent"
-                    >
-                      <Link
-                        href={project.githubLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Github className="h-3 w-3 mr-1" />
-                        Code
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {!loading &&
+              otherProjects.map((project, index) => {
+                const technologies = getTechnologies(project.technologies);
+                return (
+                  <Card
+                    key={project._id}
+                    className="group hover:shadow-md transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${(index + 2) * 100}ms` }}
+                  >
+                    <div className="aspect-video overflow-hidden rounded-t-lg">
+                      <img
+                        src={project.thumbnail || "/placeholder.svg"}
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg text-foreground group-hover:text-primary transition-colors">
+                        {project.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {project.description}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {technologies.slice(0, 3).map((tech) => (
+                          <Badge
+                            key={tech}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {tech}
+                          </Badge>
+                        ))}
+                        {technologies.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{technologies.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        {project.liveLink && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            asChild
+                            className="flex-1 bg-transparent"
+                          >
+                            <Link
+                              href={project.liveLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              Demo
+                            </Link>
+                          </Button>
+                        )}
+                        {project.githubLink && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            asChild
+                            className="flex-1 bg-transparent"
+                          >
+                            <Link
+                              href={project.githubLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Github className="h-3 w-3 mr-1" />
+                              Code
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
           </div>
         </section>
 

@@ -89,7 +89,7 @@ export default function LoginPage() {
 
       if (res.ok) {
         toast.success("Login successful");
-        router.push("/dashboard");
+        router.push("/dashboard/projects");
         Cookies.set("authToken", data.token, {
           // httpOnly: true,
           // secure: process.env.NODE_ENV === "production",
@@ -126,6 +126,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <title>Login - Portfolio - Full Stack Developer</title>
       <div className="w-full max-w-md animate-fade-in">
         {/* Back to Home */}
         <div className="mb-8">
@@ -259,10 +260,10 @@ export default function LoginPage() {
                 Demo Credentials:
               </p>
               <p className="text-sm text-muted-foreground">
-                <strong>Email:</strong> admin@example.com
+                <strong>Email:</strong> admin@portfolio.com
               </p>
               <p className="text-sm text-muted-foreground">
-                <strong>Password:</strong> password
+                <strong>Password:</strong> admin123
               </p>
             </div>
           </CardContent>
