@@ -4,9 +4,8 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14.x-black.svg?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-orange.svg)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-blue.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-5.x-purple.svg?logo=prisma&logoColor=white)](https://www.prisma.io/)
 
-A dynamic, database-driven personal portfolio website built with Next.js and Prisma ORM. This full-stack application allows for easy management of projects, blog posts, skills, and testimonials through a PostgreSQL backend, enabling seamless content updates without redeploying the site. Perfect for developers looking to showcase their work with real-time data persistence and admin capabilities.
+A dynamic, database-driven personal portfolio website built with Next.js and Mongoose. This full-stack application allows for easy management of projects, blog posts, skills, and testimonials through a PostgreSQL backend, enabling seamless content updates without redeploying the site. Perfect for developers looking to showcase their work with real-time data persistence and admin capabilities.
 
 ## Demo Credentials
 
@@ -20,10 +19,8 @@ A dynamic, database-driven personal portfolio website built with Next.js and Pri
 - [Tech Stack](#tech-stack)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Database Setup](#database-setup)
 - [Deployment](#deployment)
 - [Project Structure](#project-structure)
-- [Screenshots](#screenshots)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
@@ -45,9 +42,9 @@ A dynamic, database-driven personal portfolio website built with Next.js and Pri
 | **Framework**      | Next.js 15                         |
 | **Language**       | TypeScript 5                       |
 | **Styling**        | Tailwind CSS 4                     |
-| **Database**       | PostgreSQL (SQLite for dev)        |
+| **Database**       | Mongodb                            |
 | **Authentication** | NextAuth.js (optional)             |
-| **Build Tool**     | npm/yarn                           |
+| **Build Tool**     | npm/bun                            |
 | **Other**          | ESLint, Prettier, Zod (validation) |
 
 ## Installation
@@ -64,7 +61,7 @@ A dynamic, database-driven personal portfolio website built with Next.js and Pri
    ```bash
    npm install
    # or
-   yarn install
+   bun install
    ```
 
 3. **Environment Variables**
@@ -81,7 +78,7 @@ A dynamic, database-driven personal portfolio website built with Next.js and Pri
    ```bash
    npm run dev
    # or
-   yarn dev
+   bun dev
    ```
    Access at `http://localhost:3000`.
 
