@@ -12,6 +12,9 @@ interface WorkExperience {
   description: string;
 }
 
+// The home page fetches data with no-store; explicitly mark it dynamic
+export const dynamic = "force-dynamic";
+
 interface AboutData {
   bio: string;
   workExperience: WorkExperience[];

@@ -174,7 +174,7 @@ export default function NewBlogPostPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4 animate-fade-in">
+      <div className="flex items-start gap-4 animate-fade-in flex-col">
         <Button variant="ghost" asChild>
           <Link href="/dashboard/blog">
             <ArrowLeft className="h-4 w-4 mr-2" />

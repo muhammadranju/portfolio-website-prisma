@@ -348,6 +348,18 @@ export default function BlogPostPageClient({ params }: BlogPostPageProps) {
               <div
                 className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-code:text-foreground prose-pre:bg-muted prose-pre:border prose-pre:border-border"
                 dangerouslySetInnerHTML={{
+                  __html: `<p class="mb-4">${renderContent(post.excerpt)}</p>`,
+                }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="animate-fade-in animation-delay-400">
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardContent className="p-0">
+              <div
+                className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-code:text-foreground prose-pre:bg-muted prose-pre:border prose-pre:border-border"
+                dangerouslySetInnerHTML={{
                   __html: `<p class="mb-4">${renderContent(post.content)}</p>`,
                 }}
               />

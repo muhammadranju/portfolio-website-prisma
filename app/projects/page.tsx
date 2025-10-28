@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ExternalLink, Github } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ProjectCardSkeleton } from "@/components/skeleton-loader";
+import Image from "next/image";
 
 interface Project {
   _id: string;
@@ -71,7 +72,7 @@ export default function ProjectsPage() {
 
         {/* Featured Projects */}
         <section className="mb-20">
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8">
             {loading && <ProjectCardSkeleton />}
             {!loading &&
               featuredProjects.map((project, index) => {
@@ -82,8 +83,10 @@ export default function ProjectsPage() {
                     className="group hover:shadow-lg transition-all duration-300 animate-fade-in"
                     style={{ animationDelay: `${index * 200}ms` }}
                   >
-                    <div className="aspect-video overflow-hidden rounded-t-lg">
-                      <img
+                    <div className="aspect-video overflow-hidden rounded-t-lg -mt-6">
+                      <Image
+                        width={400}
+                        height={400}
                         src={project.thumbnail || "/placeholder.svg"}
                         alt={project.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -96,7 +99,9 @@ export default function ProjectsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <p className="text-muted-foreground leading-relaxed">
-                        {project.description}
+                        {project.description.length > 200
+                          ? project.description.substring(0, 200) + "..."
+                          : project.description}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {technologies.map((tech) => (
@@ -130,96 +135,6 @@ export default function ProjectsPage() {
                               rel="noopener noreferrer"
                             >
                               <Github className="h-4 w-4 mr-2" />
-                              Code
-                            </Link>
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-          </div>
-        </section>
-
-        {/* Other Projects */}
-        <section>
-          <h2 className="text-3xl font-bold text-foreground mb-8">
-            Other Projects
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {!loading &&
-              otherProjects.map((project, index) => {
-                const technologies = getTechnologies(project.technologies);
-                return (
-                  <Card
-                    key={project._id}
-                    className="group hover:shadow-md transition-all duration-300 animate-fade-in"
-                    style={{ animationDelay: `${(index + 2) * 100}ms` }}
-                  >
-                    <div className="aspect-video overflow-hidden rounded-t-lg">
-                      <img
-                        src={project.thumbnail || "/placeholder.svg"}
-                        alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg text-foreground group-hover:text-primary transition-colors">
-                        {project.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {project.description}
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {technologies.slice(0, 3).map((tech) => (
-                          <Badge
-                            key={tech}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {tech}
-                          </Badge>
-                        ))}
-                        {technologies.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{technologies.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex gap-2 pt-1">
-                        {project.liveLink && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            asChild
-                            className="flex-1 bg-transparent"
-                          >
-                            <Link
-                              href={project.liveLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              Demo
-                            </Link>
-                          </Button>
-                        )}
-                        {project.githubLink && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            asChild
-                            className="flex-1 bg-transparent"
-                          >
-                            <Link
-                              href={project.githubLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Github className="h-3 w-3 mr-1" />
                               Code
                             </Link>
                           </Button>
