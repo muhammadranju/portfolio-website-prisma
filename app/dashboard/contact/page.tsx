@@ -78,9 +78,9 @@ export default function ContactManagementPage() {
   useEffect(() => {
     const filtered = contacts.filter((contact) => {
       const matchesSearch =
-        contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.subject.toLowerCase().includes(searchTerm.toLowerCase());
+        contact.name?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        contact.email?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+        contact.subject?.toLowerCase()?.includes(searchTerm?.toLowerCase());
       return matchesSearch;
     });
     setFilteredContacts(filtered);
@@ -236,7 +236,7 @@ export default function ContactManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredContacts.map((contact) => (
+                {filteredContacts?.map((contact) => (
                   <TableRow key={contact._id}>
                     <TableCell>
                       <div className="font-medium text-foreground">

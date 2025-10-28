@@ -384,7 +384,7 @@ export default function ProjectsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProjects.map((project) => {
+                {filteredProjects?.map((project) => {
                   const technologies = getTechnologies(project.technologies);
                   const status = project.status || "planned";
                   return (
@@ -452,7 +452,7 @@ export default function ProjectsPage() {
             </Table>
           </div>
 
-          {filteredProjects.length === 0 && (
+          {filteredProjects?.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 No projects found matching your criteria.

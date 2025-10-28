@@ -380,7 +380,7 @@ export default function BlogManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPosts.map((post) => {
+                {filteredPosts?.map((post) => {
                   const status = post.published ? "published" : "draft";
                   const publishedAt = post.published
                     ? new Date(post.createdAt).toLocaleDateString()
