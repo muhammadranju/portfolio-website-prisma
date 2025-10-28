@@ -1,15 +1,16 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { Navigation } from "@/components/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Mail, MapPin, Phone, Send } from "lucide-react"
-import { useState } from "react"
+import { Navigation } from "@/components/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Mail, MapPin, Phone, Send } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -17,42 +18,66 @@ export default function ContactPage() {
     email: "",
     subject: "",
     message: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      // console.log(response);
+      if (response.ok) {
+        toast.success("Message sent successfully! I'll get back to you soon.");
+        // Reset form
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        const errorData = await response.json();
+        toast.error(
+          errorData.error || "Failed to send message. Please try again."
+        );
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error(
+        "An error occurred while sending the message. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-    // Reset form
-    setFormData({ name: "", email: "", subject: "", message: "" })
-    setIsSubmitting(false)
-
-    // In a real app, you would handle the form submission here
-    console.log("Form submitted:", formData)
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      <title>Contact - Portfolio - Full Stack Developer</title>
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {/* Header */}
         <div className="mb-16 animate-fade-in">
-          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">Let's Work Together</h1>
+          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 text-balance">
+            Let's Work Together
+          </h1>
           <p className="text-xl text-muted-foreground max-w-3xl text-pretty leading-relaxed">
-            I'm always interested in new opportunities and exciting projects. Whether you have a question, want to
-            discuss a project, or just want to say hello, I'd love to hear from you.
+            I'm always interested in new opportunities and exciting projects.
+            Whether you have a question, want to discuss a project, or just want
+            to say hello, I'd love to hear from you.
           </p>
         </div>
 
@@ -60,15 +85,21 @@ export default function ContactPage() {
           {/* Contact Information */}
           <div className="lg:col-span-1 space-y-8">
             <div className="animate-slide-in">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Get in Touch</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">
+                Get in Touch
+              </h2>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Mail className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1">Email</h3>
-                    <p className="text-muted-foreground">hello@example.com</p>
+                    <h3 className="font-semibold text-foreground mb-1">
+                      Email
+                    </h3>
+                    <p className="text-muted-foreground">
+                      mdranju23@example.com
+                    </p>
                   </div>
                 </div>
 
@@ -77,8 +108,10 @@ export default function ContactPage() {
                     <Phone className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1">Phone</h3>
-                    <p className="text-muted-foreground">+1 (555) 123-4567</p>
+                    <h3 className="font-semibold text-foreground mb-1">
+                      Phone
+                    </h3>
+                    <p className="text-muted-foreground">+8801799301290</p>
                   </div>
                 </div>
 
@@ -87,18 +120,24 @@ export default function ContactPage() {
                     <MapPin className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1">Location</h3>
-                    <p className="text-muted-foreground">San Francisco, CA</p>
+                    <h3 className="font-semibold text-foreground mb-1">
+                      Location
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Rajshahi, Bangladesh
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="animate-slide-in animation-delay-200">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Response Time</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">
+                Response Time
+              </h3>
               <p className="text-muted-foreground leading-relaxed">
-                I typically respond to emails within 24 hours. For urgent matters, feel free to reach out via phone or
-                LinkedIn.
+                I typically respond to emails within 24 hours. For urgent
+                matters, feel free to reach out via phone or LinkedIn.
               </p>
             </div>
           </div>
@@ -107,7 +146,9 @@ export default function ContactPage() {
           <div className="lg:col-span-2">
             <Card className="animate-fade-in animation-delay-300">
               <CardHeader>
-                <CardTitle className="text-2xl text-foreground">Send a Message</CardTitle>
+                <CardTitle className="text-2xl text-foreground">
+                  Send a Message
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -176,7 +217,12 @@ export default function ContactPage() {
                     />
                   </div>
 
-                  <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto group">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={isSubmitting}
+                    className="w-full sm:w-auto group"
+                  >
                     {isSubmitting ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
@@ -196,5 +242,5 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
