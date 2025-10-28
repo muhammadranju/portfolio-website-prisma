@@ -1,72 +1,131 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreVertical, Edit2, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Search, MoreHorizontal, Edit2, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
 
-const projects = [
-  {
-    id: 1,
-    title: "E-commerce Platform",
-    description: "Full-stack e-commerce solution with payment integration",
-    status: "completed",
-    technologies: ["Next.js", "TypeScript", "Stripe"],
-    image: "/ecommerce-concept.png",
-    date: "2024-01-15",
-  },
-  {
-    id: 2,
-    title: "Task Management App",
-    description: "Collaborative task management with real-time updates",
-    status: "in-progress",
-    technologies: ["React", "Firebase", "Tailwind"],
-    image: "/task-management-board.png",
-    date: "2024-02-20",
-  },
-  {
-    id: 3,
-    title: "AI Chat Application",
-    description: "Real-time chat with AI-powered responses",
-    status: "completed",
-    technologies: ["Next.js", "OpenAI", "Socket.io"],
-    image: "/chat-app.jpg",
-    date: "2024-03-10",
-  },
-  {
-    id: 4,
-    title: "Analytics Dashboard",
-    description: "Data visualization and analytics platform",
-    status: "completed",
-    technologies: ["React", "D3.js", "Node.js"],
-    image: "/data-analytics-dashboard.png",
-    date: "2024-01-05",
-  },
-];
+interface Project {
+  _id: string;
+  title: string;
+  description: string;
+  technologies: string | string[];
+  status?: string;
+  thumbnail?: string;
+  slug: string;
+  liveLink?: string;
+  githubLink?: string;
+  shortDescription?: string;
+  createdAt: string;
+}
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "planned" | "in-progress" | "completed"
+  >("all");
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [formData, setFormData] = useState<Project>({
+    _id: "",
+    title: "",
+    description: "",
+    technologies: [],
+    status: "planned",
+    thumbnail: "",
+    slug: "",
+    liveLink: "",
+    githubLink: "",
+    shortDescription: "",
+    createdAt: "",
+  });
+  const [techInput, setTechInput] = useState("");
 
-  const handleSearch = (e: any) => {
-    const term = e.target.value.toLowerCase();
-    setSearchTerm(term);
-    setFilteredProjects(
-      projects.filter(
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch("/api/projects");
+      const data: Project[] = await response.json();
+      setProjects(data);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+      toast.error("Failed to fetch projects");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    let filtered = projects;
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
         (p) =>
           p.title.toLowerCase().includes(term) ||
           p.description.toLowerCase().includes(term)
-      )
-    );
+      );
+    }
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((p) => p.status === statusFilter);
+    }
+
+    setFilteredProjects(filtered);
+  }, [searchTerm, statusFilter, projects]);
+
+  const getTechnologies = (techStringOrArray: string | string[]): string[] => {
+    if (Array.isArray(techStringOrArray)) {
+      return techStringOrArray;
+    }
+    if (typeof techStringOrArray === "string") {
+      return techStringOrArray
+        .split(",")
+        .map((tech) => tech.trim())
+        .filter((tech) => tech.length > 0);
+    }
+    return [];
   };
 
   const getStatusColor = (status: string) => {
@@ -81,6 +140,158 @@ export default function ProjectsPage() {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  const handleEdit = (project: Project) => {
+    setEditingProject(project);
+    setFormData({
+      ...project,
+      technologies: getTechnologies(project.technologies),
+    });
+    setTechInput("");
+    setShowModal(true);
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const addTechnology = () => {
+    if (techInput.trim() && !formData.technologies.includes(techInput.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        technologies: [...(prev.technologies as string[]), techInput.trim()],
+      }));
+      setTechInput("");
+    }
+  };
+
+  const removeTechnology = (tech: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      technologies: (prev.technologies as string[]).filter((t) => t !== tech),
+    }));
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject) return;
+
+    try {
+      const response = await fetch(`/api/projects/${editingProject._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          technologies: Array.isArray(formData.technologies)
+            ? formData.technologies
+            : formData.technologies.split(","),
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Project updated successfully");
+        setShowModal(false);
+        setEditingProject(null);
+        fetchProjects();
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to update project");
+      }
+    } catch (error) {
+      console.error("Error updating project:", error);
+      toast.error("Failed to update project");
+    }
+  };
+
+  const handleDelete = async (projectId: string) => {
+    if (confirm("Are you sure you want to delete this project?")) {
+      try {
+        const response = await fetch(`/api/projects/${projectId}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          toast.success("Project deleted successfully");
+          fetchProjects();
+        } else {
+          toast.error("Failed to delete project");
+        }
+      } catch (error) {
+        console.error("Error deleting project:", error);
+        toast.error("Failed to delete project");
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
+          <div className="animate-pulse">
+            <div className="h-8 bg-muted rounded w-48 mb-2"></div>
+            <div className="h-4 bg-muted rounded w-64"></div>
+          </div>
+          <div className="h-10 bg-muted rounded w-40"></div>
+        </div>
+        <Card className="animate-fade-in animation-delay-200">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="h-4 bg-muted rounded w-full"></div>
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="animate-fade-in animation-delay-400">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="h-6 bg-muted rounded w-1/2"></div>
+              <div className="h-4 bg-muted rounded w-full"></div>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="animate-pulse h-8 bg-muted rounded"></TableHead>
+                      <TableHead className="animate-pulse h-8 bg-muted rounded"></TableHead>
+                      <TableHead className="animate-pulse h-8 bg-muted rounded"></TableHead>
+                      <TableHead className="animate-pulse h-8 bg-muted rounded"></TableHead>
+                      <TableHead className="animate-pulse h-8 bg-muted rounded w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...Array(5)].map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <div className="h-4 bg-muted rounded w-64"></div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-6 bg-muted rounded w-20"></div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 bg-muted rounded w-24"></div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-4 bg-muted rounded w-32"></div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="h-8 bg-muted rounded w-8"></div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -99,90 +310,297 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search
-          className="absolute left-3 top-3 text-muted-foreground"
-          size={20}
-        />
-        <Input
-          placeholder="Search projects..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="pl-10"
-        />
-      </div>
-
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map((project) => (
-          <Card
-            key={project.id}
-            className="overflow-hidden hover:shadow-lg transition-shadow"
-          >
-            <div className="h-40 bg-gradient-to-br from-blue-500 to-purple-600 relative overflow-hidden">
-              <img
-                src={project.image || "/placeholder.svg"}
-                alt={project.title}
-                className="w-full h-full object-cover opacity-80"
+      {/* Filters and Search */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Filter Projects</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                size={20}
+              />
+              <Input
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
               />
             </div>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{project.title}</CardTitle>
-                  <Badge className={`mt-2 ${getStatusColor(project.status)}`}>
-                    {project.status}
-                  </Badge>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical size={16} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="gap-2">
-                      <Edit2 size={16} />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 text-red-600">
-                      <Trash2 size={16} />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                {project.description}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {project.technologies.map((tech) => (
-                  <Badge key={tech} variant="secondary" className="text-xs">
-                    {tech}
-                  </Badge>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                {new Date(project.date).toLocaleDateString()}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            <div className="flex gap-2">
+              <Button
+                variant={statusFilter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("all")}
+              >
+                All
+              </Button>
+              <Button
+                variant={statusFilter === "planned" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("planned")}
+              >
+                Planned
+              </Button>
+              <Button
+                variant={statusFilter === "in-progress" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("in-progress")}
+              >
+                In Progress
+              </Button>
+              <Button
+                variant={statusFilter === "completed" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setStatusFilter("completed")}
+              >
+                Completed
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {filteredProjects.length === 0 && (
-        <Card className="text-center py-12">
-          <CardContent>
-            <p className="text-muted-foreground mb-4">No projects found</p>
-            <Link href="/dashboard/projects/new">
-              <Button>Create Your First Project</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      )}
+      {/* Projects Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Projects ({filteredProjects.length})</CardTitle>
+          <CardDescription>
+            Manage your projects and their status
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Technologies</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProjects.map((project) => {
+                  const technologies = getTechnologies(project.technologies);
+                  const status = project.status || "planned";
+                  return (
+                    <TableRow key={project._id}>
+                      <TableCell>
+                        <div className="font-medium text-foreground">
+                          {project.title}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(status)}>
+                          {status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(project.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        <div className="flex flex-wrap gap-1 max-w-48">
+                          {technologies.slice(0, 3).map((tech) => (
+                            <Badge
+                              key={tech}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {tech}
+                            </Badge>
+                          ))}
+                          {technologies.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{technologies.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal size={16} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(project)}
+                              className="gap-2 cursor-pointer"
+                            >
+                              <Edit2 size={16} />
+                              <span>Edit</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(project._id)}
+                              className="gap-2 text-red-600 cursor-pointer"
+                            >
+                              <Trash2 size={16} />
+                              <span>Delete</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredProjects.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                No projects found matching your criteria.
+              </p>
+              <Link href="/dashboard/projects/new">
+                <Button>Create Your First Project</Button>
+              </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Modal */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+            <DialogDescription>
+              Update the project details below.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdate} className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="shortDescription">Short Description</Label>
+                <Input
+                  id="shortDescription"
+                  name="shortDescription"
+                  value={formData.shortDescription}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="planned">Planned</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="thumbnail">Thumbnail URL</Label>
+                <Input
+                  id="thumbnail"
+                  name="thumbnail"
+                  type="url"
+                  value={formData.thumbnail}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="liveLink">Live Link</Label>
+                <Input
+                  id="liveLink"
+                  name="liveLink"
+                  type="url"
+                  value={formData.liveLink}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="githubLink">GitHub Link</Label>
+                <Input
+                  id="githubLink"
+                  name="githubLink"
+                  type="url"
+                  value={formData.githubLink}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Technologies</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={techInput}
+                    onChange={(e) => setTechInput(e.target.value)}
+                    placeholder="Add technology"
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addTechnology())
+                    }
+                  />
+                  <Button
+                    type="button"
+                    onClick={addTechnology}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Add
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {Array.isArray(formData.technologies) &&
+                    formData.technologies.map((tech) => (
+                      <Badge key={tech} variant="secondary" className="gap-1">
+                        {tech}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeTechnology(tech)}
+                          className="h-4 w-4 p-0"
+                        >
+                          <X size={14} />
+                        </Button>
+                      </Badge>
+                    ))}
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Update Project</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

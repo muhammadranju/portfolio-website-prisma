@@ -1,128 +1,175 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { ArrowLeft, Save, Eye, X } from "lucide-react"
-import Link from "next/link"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { ArrowLeft, Save, Eye, X } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
 
 interface BlogFormData {
-  title: string
-  excerpt: string
-  content: string
-  tags: string[]
-  status: "draft" | "published"
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  tags: string[];
+  published: boolean;
 }
 
 interface FormErrors {
-  title?: string
-  excerpt?: string
-  content?: string
-  general?: string
+  title?: string;
+  excerpt?: string;
+  content?: string;
+  general?: string;
 }
 
 export default function NewBlogPostPage() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState<BlogFormData>({
     title: "",
+    slug: "",
     excerpt: "",
     content: "",
     tags: [],
-    status: "draft",
-  })
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [tagInput, setTagInput] = useState("")
+    published: false,
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [tagInput, setTagInput] = useState("");
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
+    const newErrors: FormErrors = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = "Title is required"
+      newErrors.title = "Title is required";
+    } else if (formData.title.length > 200) {
+      newErrors.title = "Title must be less than 200 characters";
     }
 
     if (!formData.excerpt.trim()) {
-      newErrors.excerpt = "Excerpt is required"
+      newErrors.excerpt = "Excerpt is required";
+    } else if (formData.excerpt.length > 500) {
+      newErrors.excerpt = "Excerpt must be less than 500 characters";
     }
 
     if (!formData.content.trim()) {
-      newErrors.content = "Content is required"
+      newErrors.content = "Content is required";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  const handleSubmit = async (e: React.FormEvent, status: "draft" | "published") => {
-    e.preventDefault()
-    setErrors({})
+  const generateSlug = (title: string): string => {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  };
 
-    const updatedFormData = { ...formData, status }
+  const handleSubmit = async (e: React.FormEvent, publish: boolean) => {
+    e.preventDefault();
+    setErrors({});
 
-    if (status === "published" && !validateForm()) {
-      return
+    const updatedFormData = { ...formData, published: publish };
+
+    if (publish && !validateForm()) {
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const res = await fetch("/api/blogs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedFormData),
+      });
 
-      console.log("Blog post saved:", updatedFormData)
+      const result = await res.json();
+      console.log("Blog post saved:", result);
 
-      // Redirect to blog management
-      router.push("/dashboard/blog")
+      if (res.ok) {
+        toast.success(
+          publish
+            ? "Blog post published successfully!"
+            : "Draft saved successfully!"
+        );
+        router.push("/dashboard/blog");
+      } else {
+        throw new Error(result.message || "Failed to save blog post");
+      }
     } catch (error) {
+      console.error("Error saving blog post:", error);
       setErrors({
         general: "Failed to save blog post. Please try again.",
-      })
+      });
+      toast.error("Failed to save blog post");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const newValue = value;
+      const updated = { ...prev, [name]: newValue };
+      if (name === "title") {
+        updated.slug = generateSlug(newValue);
+      }
+      return updated;
+    });
 
     // Clear field-specific error when user starts typing
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-  }
+  };
 
   const addTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
       setFormData((prev) => ({
         ...prev,
         tags: [...prev.tags, tagInput.trim()],
-      }))
-      setTagInput("")
+      }));
+      setTagInput("");
     }
-  }
+  };
 
   const removeTag = (tagToRemove: string) => {
     setFormData((prev) => ({
       ...prev,
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }))
-  }
+    }));
+  };
 
   const handleTagInputKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      e.preventDefault()
-      addTag()
+      e.preventDefault();
+      addTag();
     }
-  }
+  };
 
   return (
     <div className="space-y-8">
@@ -135,8 +182,12 @@ export default function NewBlogPostPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Create New Blog Post</h1>
-          <p className="text-muted-foreground">Write and publish a new blog post</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Create New Blog Post
+          </h1>
+          <p className="text-muted-foreground">
+            Write and publish a new blog post
+          </p>
         </div>
       </div>
 
@@ -154,7 +205,9 @@ export default function NewBlogPostPage() {
             <Card className="animate-fade-in animation-delay-200">
               <CardHeader>
                 <CardTitle>Post Content</CardTitle>
-                <CardDescription>The main content of your blog post</CardDescription>
+                <CardDescription>
+                  The main content of your blog post
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Title */}
@@ -166,9 +219,28 @@ export default function NewBlogPostPage() {
                     value={formData.title}
                     onChange={handleChange}
                     placeholder="Enter your blog post title"
-                    className={errors.title ? "border-destructive focus:border-destructive" : ""}
+                    className={
+                      errors.title
+                        ? "border-destructive focus:border-destructive"
+                        : ""
+                    }
                   />
-                  {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+                  {errors.title && (
+                    <p className="text-sm text-destructive">{errors.title}</p>
+                  )}
+                </div>
+
+                {/* Slug */}
+                <div className="space-y-2">
+                  <Label htmlFor="slug">Slug *</Label>
+                  <Input
+                    id="slug"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleChange}
+                    placeholder="Auto-generated from title (editable)"
+                    className="font-mono text-sm"
+                  />
                 </div>
 
                 {/* Excerpt */}
@@ -181,9 +253,15 @@ export default function NewBlogPostPage() {
                     onChange={handleChange}
                     placeholder="Write a brief excerpt that summarizes your post"
                     rows={3}
-                    className={errors.excerpt ? "border-destructive focus:border-destructive" : ""}
+                    className={
+                      errors.excerpt
+                        ? "border-destructive focus:border-destructive"
+                        : ""
+                    }
                   />
-                  {errors.excerpt && <p className="text-sm text-destructive">{errors.excerpt}</p>}
+                  {errors.excerpt && (
+                    <p className="text-sm text-destructive">{errors.excerpt}</p>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -196,11 +274,18 @@ export default function NewBlogPostPage() {
                     onChange={handleChange}
                     placeholder="Write your blog post content here. You can use Markdown formatting."
                     rows={20}
-                    className={`resize-none ${errors.content ? "border-destructive focus:border-destructive" : ""}`}
+                    className={`resize-none ${
+                      errors.content
+                        ? "border-destructive focus:border-destructive"
+                        : ""
+                    }`}
                   />
-                  {errors.content && <p className="text-sm text-destructive">{errors.content}</p>}
+                  {errors.content && (
+                    <p className="text-sm text-destructive">{errors.content}</p>
+                  )}
                   <p className="text-sm text-muted-foreground">
-                    Tip: You can use Markdown syntax for formatting (e.g., **bold**, *italic*, # headings)
+                    Tip: You can use Markdown syntax for formatting (e.g.,
+                    **bold**, *italic*, # headings)
                   </p>
                 </div>
               </CardContent>
@@ -213,13 +298,15 @@ export default function NewBlogPostPage() {
             <Card className="animate-fade-in animation-delay-400">
               <CardHeader>
                 <CardTitle>Publish</CardTitle>
-                <CardDescription>Save or publish your blog post</CardDescription>
+                <CardDescription>
+                  Save or publish your blog post
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-col gap-2">
                   <Button
                     type="button"
-                    onClick={(e) => handleSubmit(e, "draft")}
+                    onClick={(e) => handleSubmit(e, false)}
                     disabled={isLoading}
                     variant="outline"
                     className="w-full"
@@ -238,7 +325,7 @@ export default function NewBlogPostPage() {
                   </Button>
                   <Button
                     type="button"
-                    onClick={(e) => handleSubmit(e, "published")}
+                    onClick={(e) => handleSubmit(e, true)}
                     disabled={isLoading}
                     className="w-full"
                   >
@@ -262,7 +349,9 @@ export default function NewBlogPostPage() {
             <Card className="animate-fade-in animation-delay-600">
               <CardHeader>
                 <CardTitle>Tags</CardTitle>
-                <CardDescription>Add tags to categorize your post</CardDescription>
+                <CardDescription>
+                  Add tags to categorize your post
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
@@ -280,9 +369,17 @@ export default function NewBlogPostPage() {
                 {formData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                      >
                         {tag}
-                        <button type="button" onClick={() => removeTag(tag)} className="ml-1 hover:text-destructive">
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="ml-1 hover:text-destructive"
+                        >
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
@@ -295,5 +392,5 @@ export default function NewBlogPostPage() {
         </div>
       </form>
     </div>
-  )
+  );
 }
